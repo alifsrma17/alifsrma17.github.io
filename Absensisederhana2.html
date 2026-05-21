@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absensi Digital - SRMA 17 Surakarta</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Plus Jakarta Sans Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .active-tab {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            border-left: 4px solid #3b82f6;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col md:flex-row">
+
+    <!-- SIDEBAR (Navigation & Branding) -->
+    <aside id="sidebar" class="w-full md:w-64 bg-slate-900 text-white flex flex-col z-20 transition-transform duration-300 md:translate-x-0">
+        <!-- Brand Header -->
+        <div class="p-6 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-600 p-2 rounded-lg text-white">
+                    <i class="fa-solid fa-graduation-cap text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">SRMA 17</h1>
+                    <p class="text-xs text-slate-400">Surakarta</p>
+                </div>
+            </div>
+            <!-- Mobile Menu Toggle Button (Inside Sidebar Header for small screens) -->
+            <button onclick="toggleMobileMenu()" class="md:hidden text-slate-400 hover:text-white focus:outline-none">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Class Quick Selector Menu -->
+        <div class="px-6 py-4 border-b border-slate-800">
+            <div class="bg-slate-800/60 rounded-xl p-3 border border-slate-700/50">
+                <label for="class-selector" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Pilih Kelas Aktif</label>
+                <div class="relative">
+                    <select id="class-selector" onchange="changeActiveClass(this.value)" class="w-full bg-slate-900 border border-slate-700 text-blue-400 text-xs rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold appearance-none cursor-pointer">
+                        <!-- Populated dynamically via JS -->
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between mt-3 pt-2 border-t border-slate-700/50 text-xs">
+                    <span id="sidebar-student-count" class="text-slate-300">Siswa: 0 Orang</span>
+                    <span class="text-emerald-400 font-medium flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Aktif
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-1 px-4 py-4 space-y-1">
+            <button onclick="switchView('dashboard')" id="nav-dashboard" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-800 hover:text-white">
+                <i class="fa-solid fa-chart-pie w-5"></i>
+                <span>Beranda & Analitik</span>
+            </button>
+            <button onclick="switchView('input-absen')" id="nav-input-absen" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-800 hover:text-white">
+                <i class="fa-solid fa-clipboard-user w-5"></i>
+                <span>Catat Absensi</span>
+            </button>
+            <button onclick="switchView('rekap')" id="nav-rekap" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-800 hover:text-white">
+                <i class="fa-solid fa-folder-open w-5"></i>
+                <span>Rekap & Laporan</span>
+            </button>
+            <button onclick="switchView('kelola-siswa')" id="nav-kelola-siswa" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all text-slate-300 hover:bg-slate-800 hover:text-white">
+                <i class="fa-solid fa-user-gear w-5"></i>
+                <span>Kelola Kelas & Siswa</span>
+            </button>
+        </nav>
+
+        <!-- Footer Info -->
+        <div class="p-6 border-t border-slate-800 text-xs text-slate-500 text-center">
+            <p>&copy; 2026 SRMA 17 Surakarta</p>
+            <p class="mt-1">Sistem Absensi Versi 2.1</p>
+        </div>
+    </aside>
+
+    <!-- MOBILE TOP BAR -->
+    <header class="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center shadow-md">
+        <div class="flex items-center space-x-2">
+            <div class="bg-blue-600 p-2 rounded-lg text-white text-sm">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <span class="font-bold text-sm">Absensi SRMA 17</span>
+        </div>
+        <button onclick="toggleMobileMenu()" class="text-slate-300 hover:text-white">
+            <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+    </header>
+
+    <!-- MAIN CONTENT WRAPPER -->
+    <main class="flex-1 flex flex-col overflow-y-auto h-screen p-4 md:p-8">
+
+        <!-- HEADER AREA WITH DYNAMIC GREETING -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-6 border-b border-slate-200">
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 id="view-title" class="text-2xl md:text-3xl font-bold text-slate-900">Beranda & Ringkasan</h1>
+                    <span id="active-class-title-badge" class="px-2.5 py-1 text-xs font-black bg-blue-100 text-blue-700 rounded-lg uppercase tracking-wider">-</span>
+                </div>
+                <p id="view-subtitle" class="text-sm text-slate-500 mt-1">Pantau perkembangan kehadiran kelas SRMA 17 Surakarta</p>
+            </div>
+            <div class="flex items-center space-x-3 bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200">
+                <i class="fa-regular fa-calendar-days text-blue-600"></i>
+                <span id="current-date-badge" class="font-semibold text-sm text-slate-700">Kamis, 21 Mei 2026</span>
+            </div>
+        </div>
+
+        <!-- CUSTOM NOTIFICATION POPUP (Alternative to native alert) -->
+        <div id="custom-toast" class="fixed top-5 right-5 z-50 transform translate-y-[-150%] transition-transform duration-300 pointer-events-none">
+            <div class="bg-slate-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center space-x-3 max-w-sm border border-slate-800">
+                <div id="toast-icon-bg" class="p-2 rounded-lg bg-emerald-500/20 text-emerald-400">
+                    <i id="toast-icon" class="fa-solid fa-circle-check"></i>
+                </div>
+                <div>
+                    <h4 id="toast-title" class="font-semibold text-sm">Berhasil!</h4>
+                    <p id="toast-message" class="text-xs text-slate-400 mt-0.5">Operasi telah diselesaikan.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: DASHBOARD -->
+        <section id="view-section-dashboard" class="space-y-6">
+            <!-- Analytics Summary Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Hadir Card -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition-all">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Hadir Hari Ini</span>
+                        <span class="p-2 rounded-xl bg-emerald-50 text-emerald-600"><i class="fa-solid fa-user-check"></i></span>
+                    </div>
+                    <div>
+                        <h3 id="stat-hadir" class="text-3xl font-bold text-slate-800">0</h3>
+                        <p class="text-xs text-slate-400 mt-1">Siswa masuk kelas</p>
+                    </div>
+                </div>
+
+                <!-- Sakit Card -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition-all">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Sakit</span>
+                        <span class="p-2 rounded-xl bg-blue-50 text-blue-600"><i class="fa-solid fa-kit-medical"></i></span>
+                    </div>
+                    <div>
+                        <h3 id="stat-sakit" class="text-3xl font-bold text-slate-800">0</h3>
+                        <p class="text-xs text-slate-400 mt-1">Menyerahkan surat dokter</p>
+                    </div>
+                </div>
+
+                <!-- Izin Card -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition-all">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-semibold text-amber-600 uppercase tracking-wider">Izin</span>
+                        <span class="p-2 rounded-xl bg-amber-50 text-amber-600"><i class="fa-solid fa-envelope"></i></span>
+                    </div>
+                    <div>
+                        <h3 id="stat-izin" class="text-3xl font-bold text-slate-800">0</h3>
+                        <p class="text-xs text-slate-400 mt-1">Dengan keterangan wali</p>
+                    </div>
+                </div>
+
+                <!-- Alpa Card -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition-all">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-semibold text-rose-600 uppercase tracking-wider">Tanpa Keterangan</span>
+                        <span class="p-2 rounded-xl bg-rose-50 text-rose-600"><i class="fa-solid fa-user-xmark"></i></span>
+                    </div>
+                    <div>
+                        <h3 id="stat-alpa" class="text-3xl font-bold text-slate-800">0</h3>
+                        <p class="text-xs text-slate-400 mt-1">Perlu ditindaklanjuti</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Charts and Logs -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Main Attendance Chart -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-150 lg:col-span-2">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="font-bold text-slate-800">Grafik Kehadiran Mingguan</h3>
+                            <p class="text-xs text-slate-400">Persentase tingkat kehadiran per hari</p>
+                        </div>
+                        <span class="text-xs font-semibold bg-blue-50 text-blue-600 px-3 py-1 rounded-full">Automated</span>
+                    </div>
+                    <div class="relative h-[280px]">
+                        <canvas id="weeklyAttendanceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Quick Information & School Info Card -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-150 flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-bold text-slate-800 mb-2">Profil Kelas Aktif</h3>
+                        <p class="text-xs text-slate-500 mb-4 leading-relaxed">Kelola dan amankan riwayat presensi harian secara efisien dan terstruktur menggunakan partisi menu per kelas yang cerdas.</p>
+                        
+                        <!-- Rincian Stats Lainnya -->
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                                <span class="text-xs text-slate-600 flex items-center"><i class="fa-solid fa-venus-mars text-blue-500 mr-2"></i>Rasio Gender</span>
+                                <span id="dash-gender-ratio" class="text-xs font-semibold text-slate-700">0 ♂ / 0 ♀</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                                <span class="text-xs text-slate-600 flex items-center"><i class="fa-solid fa-percent text-emerald-500 mr-2"></i>Rata-Rata Kehadiran</span>
+                                <span id="dash-average-presence" class="text-xs font-semibold text-slate-700">0%</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                                <span class="text-xs text-slate-600 flex items-center"><i class="fa-solid fa-clock-rotate-left text-amber-500 mr-2"></i>Update Terakhir</span>
+                                <span id="dash-last-update" class="text-xs font-semibold text-slate-700">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button onclick="switchView('input-absen')" class="w-full mt-4 bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs py-3 px-4 rounded-xl flex items-center justify-center space-x-2 transition-all">
+                        <span>Pencatatan Presensi Hari Ini</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: INPUT ABSENSI -->
+        <section id="view-section-input-absen" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-150">
+                <!-- Control Bar for Input -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-slate-100">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                        <div>
+                            <label for="absensi-date" class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Pilih Tanggal Absensi</label>
+                            <input type="date" id="absensi-date" onchange="loadAttendanceForSelectedDate()" class="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 font-semibold">
+                        </div>
+                        <div class="self-end pt-5 sm:pt-0">
+                            <span id="date-status-badge" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-600 border border-amber-200"><i class="fa-regular fa-clock mr-1"></i>Belum Dicatat</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                        <button onclick="setAllAttendance('H')" class="flex-1 sm:flex-none px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all border border-emerald-200">
+                            <i class="fa-solid fa-check-double"></i> Hadirkan Semua
+                        </button>
+                        <button onclick="resetAllAttendance()" class="flex-1 sm:flex-none px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all border border-slate-200">
+                            <i class="fa-solid fa-rotate-left"></i> Atur Ulang
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Search / Filtering within Absen List -->
+                <div class="my-4 flex items-center bg-slate-50 rounded-xl px-3 py-2 border border-slate-200">
+                    <i class="fa-solid fa-magnifying-glass text-slate-400 mr-2"></i>
+                    <input type="text" id="search-absen-input" onkeyup="filterAbsenList()" placeholder="Cari nama siswa..." class="bg-transparent text-sm w-full outline-none text-slate-700">
+                </div>
+
+                <!-- Students Interactive List for Presence -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-100 text-xs font-bold uppercase tracking-wider text-slate-400">
+                                <th class="py-3 px-4 w-12 text-center">No</th>
+                                <th class="py-3 px-4">Nama Siswa</th>
+                                <th class="py-3 px-4 w-24 text-center hidden sm:table-cell">Gender</th>
+                                <th class="py-3 px-4 text-center w-[240px] sm:w-[320px]">Status Absensi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendance-list-tbody" class="divide-y divide-slate-100">
+                            <!-- Populated Dynamically via Javascript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Save Trigger Footer -->
+                <div class="mt-6 pt-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div class="text-xs text-slate-500">
+                        <i class="fa-solid fa-circle-info text-blue-500 mr-1"></i> Jangan lupa klik <strong>Simpan Absensi</strong> setelah menyelesaikan pencatatan harian.
+                    </div>
+                    <button onclick="saveAttendanceRecord()" class="w-full sm:w-auto px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-500/10 flex items-center justify-center gap-2 transition-all">
+                        <i class="fa-solid fa-floppy-disk"></i> Simpan Absensi Kelas
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: REKAPITULASI & LAPORAN -->
+        <section id="view-section-rekap" class="hidden space-y-6">
+            <!-- Filter Options Panel -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-150">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-slate-100">
+                    <div>
+                        <h3 class="font-bold text-slate-800">Rekapitulasi Kehadiran Kelas</h3>
+                        <p class="text-xs text-slate-400">Lihat total akumulasi ketidakhadiran, sakit, izin, dan alpa pada kelas aktif</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                        <button onclick="exportToCSV()" class="flex-1 md:flex-none px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-all">
+                            <i class="fa-solid fa-file-csv"></i> Ekspor Laporan CSV
+                        </button>
+                        <button onclick="clearAllAttendanceHistoryConfirm()" class="flex-1 md:flex-none px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 transition-all border border-rose-200">
+                            <i class="fa-solid fa-trash-can"></i> Kosongkan Riwayat Kelas
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Cumulative Stats Summary Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 my-6">
+                    <div class="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Hadir (Total)</span>
+                        <h4 id="rekap-total-hadir" class="text-2xl font-black text-slate-800 mt-1">0</h4>
+                    </div>
+                    <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-blue-700">Sakit (Total)</span>
+                        <h4 id="rekap-total-sakit" class="text-2xl font-black text-slate-800 mt-1">0</h4>
+                    </div>
+                    <div class="bg-amber-50/50 p-4 rounded-xl border border-amber-100">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700">Izin (Total)</span>
+                        <h4 id="rekap-total-izin" class="text-2xl font-black text-slate-800 mt-1">0</h4>
+                    </div>
+                    <div class="bg-rose-50/50 p-4 rounded-xl border border-rose-100">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-rose-700">Alpa (Total)</span>
+                        <h4 id="rekap-total-alpa" class="text-2xl font-black text-slate-800 mt-1">0</h4>
+                    </div>
+                </div>
+
+                <!-- Search Input for Rekap -->
+                <div class="mb-4 flex items-center bg-slate-50 rounded-xl px-3 py-2 border border-slate-200">
+                    <i class="fa-solid fa-magnifying-glass text-slate-400 mr-2"></i>
+                    <input type="text" id="search-rekap-input" onkeyup="filterRekapList()" placeholder="Cari nama siswa..." class="bg-transparent text-sm w-full outline-none text-slate-700">
+                </div>
+
+                <!-- Cumulative Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-150 text-xs font-bold uppercase tracking-wider text-slate-400">
+                                <th class="py-3 px-4 w-12 text-center">No</th>
+                                <th class="py-3 px-4">Nama Siswa</th>
+                                <th class="py-3 px-4 text-center w-16 text-emerald-600 bg-emerald-50/20">H</th>
+                                <th class="py-3 px-4 text-center w-16 text-blue-600 bg-blue-50/20">S</th>
+                                <th class="py-3 px-4 text-center w-16 text-amber-600 bg-amber-50/20">I</th>
+                                <th class="py-3 px-4 text-center w-16 text-rose-600 bg-rose-50/20">A</th>
+                                <th class="py-3 px-4 text-center w-28">Persentase</th>
+                                <th class="py-3 px-4 w-32">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rekap-list-tbody" class="divide-y divide-slate-100">
+                            <!-- Populated Dynamically via Javascript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Detailed Historical Log Section -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-150">
+                <h3 class="font-bold text-slate-800 mb-2">Riwayat Presensi Kelas Tersimpan</h3>
+                <p class="text-xs text-slate-400 mb-4">Berikut adalah tanggal-tanggal dengan rekaman kehadiran aktif untuk kelas ini.</p>
+                <div id="historical-dates-list" class="flex flex-wrap gap-2">
+                    <!-- Dates badges injected dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: KELOLA DATA SISWA & KELAS -->
+        <section id="view-section-kelola-siswa" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Hand Management Columns -->
+                <div class="space-y-6 lg:col-span-1">
+                    
+                    <!-- Add Student Form Container -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-150 h-fit">
+                        <h3 id="form-siswa-title" class="font-bold text-slate-800 mb-1">Tambah Siswa Baru</h3>
+                        <p class="text-xs text-slate-400 mb-4">Daftarkan siswa ke kelas aktif yang dipilih</p>
+                        
+                        <form id="student-form" onsubmit="handleStudentFormSubmit(event)" class="space-y-4">
+                            <input type="hidden" id="student-edit-id" value="">
+                            
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">No. Absen</label>
+                                <input type="number" id="student-absen-num" required min="1" max="100" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Contoh: 21">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Nama Lengkap Siswa</label>
+                                <input type="text" id="student-fullname" required class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Contoh: Muhammad Rafli">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Jenis Kelamin</label>
+                                <select id="student-gender" required class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="" disabled selected>Pilih Gender</option>
+                                    <option value="L">Laki-laki (L)</option>
+                                    <option value="P">Perempuan (P)</option>
+                                </select>
+                            </div>
+
+                            <div class="pt-2 flex gap-2">
+                                <button type="submit" id="btn-submit-siswa" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs py-3 px-4 rounded-xl transition-all shadow-md shadow-blue-500/10">
+                                    Simpan Siswa
+                                </button>
+                                <button type="button" id="btn-cancel-edit" onclick="resetStudentForm()" class="hidden px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold text-xs rounded-xl transition-all">
+                                    Batal
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Add/Delete Classes Panel -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-150 h-fit">
+                        <h3 class="font-bold text-slate-800 mb-1">Manajemen Menu Kelas</h3>
+                        <p class="text-xs text-slate-400 mb-4">Buat atau hapus daftar kelas belajar di sistem</p>
+                        
+                        <form id="class-form" onsubmit="handleClassFormSubmit(event)" class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Nama Kelas Baru</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="new-class-name" required class="flex-1 bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Contoh: XII IPA 1">
+                                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 rounded-xl transition-all shadow-sm">
+                                        <i class="fa-solid fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <!-- Dynamic Classes Management Roster -->
+                        <div class="mt-5 border-t border-slate-100 pt-4">
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Daftar Kelas Tersedia</label>
+                            <div id="class-management-list" class="space-y-2 max-h-[220px] overflow-y-auto">
+                                <!-- Loaded dynamically via JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Roster List Container -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-150 lg:col-span-2">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="font-bold text-slate-800">Daftar Roster Kelas</h3>
+                            <p class="text-xs text-slate-400">Total siswa terdaftar dalam kelas yang sedang aktif</p>
+                        </div>
+                        <span id="manage-student-badge" class="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-semibold rounded-full">0 Orang</span>
+                    </div>
+
+                    <!-- Search Input for Roster -->
+                    <div class="mb-4 flex items-center bg-slate-50 rounded-xl px-3 py-2 border border-slate-200">
+                        <i class="fa-solid fa-magnifying-glass text-slate-400 mr-2"></i>
+                        <input type="text" id="search-roster-input" onkeyup="filterRosterList()" placeholder="Cari berdasarkan nama..." class="bg-transparent text-sm w-full outline-none text-slate-700">
+                    </div>
+
+                    <div class="overflow-x-auto max-h-[620px] overflow-y-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-150 text-xs font-bold uppercase tracking-wider text-slate-400 sticky top-0 bg-white z-10">
+                                    <th class="py-3 px-4 w-12 text-center">Absen</th>
+                                    <th class="py-3 px-4">Nama Siswa</th>
+                                    <th class="py-3 px-4 w-28 text-center">Gender</th>
+                                    <th class="py-3 px-4 w-32 text-right">Kelola</th>
+                                </tr>
+                            </thead>
+                            <tbody id="roster-list-tbody" class="divide-y divide-slate-100">
+                                <!-- Populated Dynamically via Javascript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CONFIRMATION / RESET DIALOG MODAL -->
+        <div id="confirmation-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+            <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 transform scale-95 transition-all duration-300">
+                <div class="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center text-xl mb-4">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <h3 id="confirm-title" class="text-lg font-bold text-slate-900">Apakah Anda yakin?</h3>
+                <p id="confirm-message" class="text-xs text-slate-500 mt-2 leading-relaxed">Tindakan ini tidak dapat dibatalkan secara instan.</p>
+                <div class="mt-6 flex gap-2">
+                    <button id="confirm-yes-btn" class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-rose-500/10">Ya, Lanjutkan</button>
+                    <button onclick="closeConfirmModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all">Batal</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- APP LOGIC SCRIPT -->
+    <script>
+        // Default Mock Classes
+        const defaultClasses = [
+            { id: "c1", name: "10 Akselerasi A" },
+            { id: "c2", name: "11 Akselerasi B" },
+            { id: "c3", name: "12 Akselerasi C" }
+        ];
+
+        // Default Mock Students categorized by Class ID
+        const defaultStudentsByClass = {
+            "c1": [
+                { id: "s1", name: "Ahmad Fauzi", gender: "L", absentNum: 1 },
+                { id: "s2", name: "Amelia Putri", gender: "P", absentNum: 2 },
+                { id: "s3", name: "Bagas Kurniawan", gender: "L", absentNum: 3 },
+                { id: "s4", name: "Citra Kirana", gender: "P", absentNum: 4 },
+                { id: "s5", name: "Dani Setiawan", gender: "L", absentNum: 5 },
+                { id: "s6", name: "Diah Ayu", gender: "P", absentNum: 6 },
+                { id: "s7", name: "Fajar Nugroho", gender: "L", absentNum: 7 },
+                { id: "s8", name: "Giska Amalia", gender: "P", absentNum: 8 }
+            ],
+            "c2": [
+                { id: "s2_1", name: "Hendra Wijaya", gender: "L", absentNum: 1 },
+                { id: "s2_2", name: "Indah Permatasari", gender: "P", absentNum: 2 },
+                { id: "s2_3", name: "Joko Susilo", gender: "L", absentNum: 3 },
+                { id: "s2_4", name: "Kartika Sari", gender: "P", absentNum: 4 },
+                { id: "s2_5", name: "Luthfi Pratama", gender: "L", absentNum: 5 },
+                { id: "s2_6", name: "Muhammad Ridho", gender: "L", absentNum: 6 }
+            ],
+            "c3": [
+                { id: "s3_1", name: "Nabila Syafira", gender: "P", absentNum: 1 },
+                { id: "s3_2", name: "Putu Aditya", gender: "L", absentNum: 2 },
+                { id: "s3_3", name: "Rian Hidayat", gender: "L", absentNum: 3 },
+                { id: "s3_4", name: "Siti Aminah", gender: "P", absentNum: 4 },
+                { id: "s3_5", name: "Tri Wahyuni", gender: "P", absentNum: 5 },
+                { id: "s3_6", name: "Yusuf Bahtiar", gender: "L", absentNum: 6 }
+            ]
+        };
+
+        // Default Mock History categorized by Class ID and Date Key
+        const defaultHistoryByClass = {
+            "c1": {
+                "2026-05-19": { s1: 'H', s2: 'S', s3: 'H', s4: 'H', s5: 'H', s6: 'H', s7: 'H', s8: 'H' },
+                "2026-05-20": { s1: 'H', s2: 'H', s3: 'H', s4: 'H', s5: 'H', s6: 'H', s7: 'H', s8: 'H' },
+                "2026-05-21": { s1: 'H', s2: 'H', s3: 'H', s4: 'H', s5: 'H', s6: 'S', s7: 'H', s8: 'I' }
+            },
+            "c2": {
+                "2026-05-21": { s2_1: 'H', s2_2: 'H', s2_3: 'S', s2_4: 'H', s2_5: 'H', s2_6: 'H' }
+            },
+            "c3": {
+                "2026-05-21": { s3_1: 'H', s3_2: 'I', s3_3: 'H', s3_4: 'H', s3_5: 'H', s3_6: 'A' }
+            }
+        };
+
+        // Application State
+        let state = {
+            classes: JSON.parse(localStorage.getItem('srma17_classes')) || defaultClasses,
+            activeClassId: localStorage.getItem('srma17_active_class_id') || 'c1',
+            students: JSON.parse(localStorage.getItem('srma17_students_by_class')) || defaultStudentsByClass,
+            history: JSON.parse(localStorage.getItem('srma17_history_by_class')) || defaultHistoryByClass,
+            selectedDate: getTodayDateString(),
+            currentView: 'dashboard',
+            tempAttendance: {} // Work-in-progress current attendance mappings
+        };
+
+        let attendanceChartInstance = null;
+        let confirmActionCallback = null;
+
+        // Helpers to fetch current active class scope
+        function getActiveStudents() {
+            if (!state.students[state.activeClassId]) {
+                state.students[state.activeClassId] = [];
+            }
+            return state.students[state.activeClassId];
+        }
+
+        function getActiveHistory() {
+            if (!state.history[state.activeClassId]) {
+                state.history[state.activeClassId] = {};
+            }
+            return state.history[state.activeClassId];
+        }
+
+        // On window fully loaded
+        window.onload = function() {
+            // Setup current date default to today
+            document.getElementById('absensi-date').value = state.selectedDate;
+            document.getElementById('current-date-badge').innerText = formatIndonesianDate(state.selectedDate);
+            
+            // Populate Class Selections
+            populateClassSelector();
+            renderClassManagementList();
+
+            // Sync widgets & charts
+            updateSidebarAndStats();
+
+            // Set current initial view
+            switchView('dashboard');
+        };
+
+        // Helper: Get today's YYYY-MM-DD format based on local timezone
+        function getTodayDateString() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Helper: Indonesian Date Formatter
+        function formatIndonesianDate(dateString) {
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            
+            const dateObj = new Date(dateString);
+            if (isNaN(dateObj)) return dateString;
+            
+            const dayName = days[dateObj.getDay()];
+            const day = dateObj.getDate();
+            const monthName = months[dateObj.getMonth()];
+            const year = dateObj.getFullYear();
+            
+            return `${dayName}, ${day} ${monthName} ${year}`;
+        }
+
+        // POPULATE SELECTOR
+        function populateClassSelector() {
+            const selector = document.getElementById('class-selector');
+            if (!selector) return;
+            selector.innerHTML = '';
+
+            state.classes.forEach(cls => {
+                const opt = document.createElement('option');
+                opt.value = cls.id;
+                opt.innerText = cls.name;
+                if (cls.id === state.activeClassId) {
+                    opt.selected = true;
+                }
+                selector.appendChild(opt);
+            });
+        }
+
+        // CHANGE ACTIVE CLASS CORE
+        function changeActiveClass(classId) {
+            state.activeClassId = classId;
+            localStorage.setItem('srma17_active_class_id', classId);
+            
+            // Sync selectors in sidebar and header if any
+            const selectEl = document.getElementById('class-selector');
+            if (selectEl) selectEl.value = classId;
+
+            // Update stats
+            updateSidebarAndStats();
+
+            // Notify UI
+            const activeClass = state.classes.find(c => c.id === classId);
+            if (activeClass) {
+                showToast("Kelas Diubah", `Sekarang memuat kelas: ${activeClass.name}`, "info");
+                document.getElementById('active-class-title-badge').innerText = activeClass.name;
+            }
+
+            // Reload active view with the new data context
+            switchView(state.currentView);
+            renderClassManagementList();
+        }
+
+        // ROUTER / SWITCH VIEW LOGIC
+        function switchView(viewName) {
+            state.currentView = viewName;
+            
+            // Hide all sections
+            const sections = ['dashboard', 'input-absen', 'rekap', 'kelola-siswa'];
+            sections.forEach(sec => {
+                document.getElementById(`view-section-${sec}`).classList.add('hidden');
+                document.getElementById(`nav-${sec}`).classList.remove('active-tab');
+            });
+
+            // Show current section & highlight navbar
+            document.getElementById(`view-section-${viewName}`).classList.remove('hidden');
+            document.getElementById(`nav-${viewName}`).classList.add('active-tab');
+
+            // Manage dynamic text changes
+            const titleEl = document.getElementById('view-title');
+            const subtitleEl = document.getElementById('view-subtitle');
+            
+            // Get current active class name
+            const activeClass = state.classes.find(c => c.id === state.activeClassId);
+            const className = activeClass ? activeClass.name : '-';
+            document.getElementById('active-class-title-badge').innerText = className;
+
+            if (viewName === 'dashboard') {
+                titleEl.innerText = "Beranda & Analitik";
+                subtitleEl.innerText = `Pantau perkembangan statistik kehadiran kelas ${className}`;
+                renderDashboardCharts();
+                updateDashboardCardStats();
+            } else if (viewName === 'input-absen') {
+                titleEl.innerText = "Pencatatan Absensi";
+                subtitleEl.innerText = `Catat dan kelola presensi harian siswa kelas ${className}`;
+                loadAttendanceForSelectedDate();
+            } else if (viewName === 'rekap') {
+                titleEl.innerText = "Rekapitulasi & Laporan";
+                subtitleEl.innerText = `Amati data akumulatif kehadiran & ekspor laporan kelas ${className}`;
+                renderRekapList();
+                renderHistoricalDates();
+            } else if (viewName === 'kelola-siswa') {
+                titleEl.innerText = "Kelola Kelas & Siswa";
+                subtitleEl.innerText = `Ubah, tambah, atau hapus roster kelas dan siswa di sistem`;
+                renderRosterList();
+                renderClassManagementList();
+            }
+
+            // Collapse mobile sidebar automatically on view shift
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('hidden');
+            }
+        }
+
+        // TOGGLE SIDEBAR FOR MOBILE
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar.classList.contains('hidden') || sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('hidden');
+                sidebar.classList.remove('-translate-x-full');
+            } else {
+                sidebar.classList.add('hidden');
+            }
+        }
+
+        // TOAST NOTIFICATIONS
+        function showToast(title, message, type = 'success') {
+            const toast = document.getElementById('custom-toast');
+            const toastTitle = document.getElementById('toast-title');
+            const toastMsg = document.getElementById('toast-message');
+            const toastIconBg = document.getElementById('toast-icon-bg');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastTitle.innerText = title;
+            toastMsg.innerText = message;
+
+            if (type === 'success') {
+                toastIconBg.className = "p-2 rounded-lg bg-emerald-500/20 text-emerald-400";
+                toastIcon.className = "fa-solid fa-circle-check";
+            } else if (type === 'error') {
+                toastIconBg.className = "p-2 rounded-lg bg-rose-500/20 text-rose-400";
+                toastIcon.className = "fa-solid fa-triangle-exclamation";
+            } else {
+                toastIconBg.className = "p-2 rounded-lg bg-blue-500/20 text-blue-400";
+                toastIcon.className = "fa-solid fa-info-circle";
+            }
+
+            toast.classList.remove('translate-y-[-150%]');
+            setTimeout(() => {
+                toast.classList.add('translate-y-[-150%]');
+            }, 3000);
+        }
+
+        // ATTENDANCE INPUT & MANAGEMENT PROCESS
+        function loadAttendanceForSelectedDate() {
+            const dateInput = document.getElementById('absensi-date').value;
+            state.selectedDate = dateInput;
+            document.getElementById('current-date-badge').innerText = formatIndonesianDate(dateInput);
+
+            const activeStudents = getActiveStudents();
+            const activeHistory = getActiveHistory();
+
+            // Fetch if record already exists for selected date
+            const existingRecord = activeHistory[dateInput];
+            const dateStatusBadge = document.getElementById('date-status-badge');
+
+            // Initialize tempAttendance state
+            state.tempAttendance = {};
+            
+            // Sort students by absentNum to ensure consistent sorted presence listing
+            activeStudents.sort((a, b) => Number(a.absentNum) - Number(b.absentNum));
+
+            if (existingRecord) {
+                // Pre-populate with saved history values
+                activeStudents.forEach(st => {
+                    state.tempAttendance[st.id] = existingRecord[st.id] || 'H'; // Default to 'H' (Hadir)
+                });
+                dateStatusBadge.innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i>Sudah Tersimpan';
+                dateStatusBadge.className = "px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200";
+            } else {
+                // Default all to Present 'H' if new day
+                activeStudents.forEach(st => {
+                    state.tempAttendance[st.id] = 'H';
+                });
+                dateStatusBadge.innerHTML = '<i class="fa-regular fa-clock mr-1"></i>Belum Dicatat';
+                dateStatusBadge.className = "px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-600 border border-amber-200";
+            }
+
+            renderAttendanceTbody();
+        }
+
+        // RENDER ATTENDANCE LIST ITEMS
+        function renderAttendanceTbody() {
+            const tbody = document.getElementById('attendance-list-tbody');
+            tbody.innerHTML = '';
+            
+            const activeStudents = getActiveStudents();
+
+            if (activeStudents.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="py-8 text-center text-xs text-slate-400">
+                            <i class="fa-solid fa-users-slash text-2xl mb-2 block"></i>
+                            Roster siswa di kelas ini kosong. Tambahkan siswa di tab Kelola Kelas & Siswa.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            activeStudents.forEach((student) => {
+                const currentStatus = state.tempAttendance[student.id] || 'H';
+                
+                // Color codes dynamically rendered
+                const isHadir = currentStatus === 'H';
+                const isSakit = currentStatus === 'S';
+                const isIzin = currentStatus === 'I';
+                const isAlpa = currentStatus === 'A';
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/50 transition-colors";
+                tr.setAttribute('data-student-name', student.name.toLowerCase());
+
+                tr.innerHTML = `
+                    <td class="py-4 px-4 text-center font-bold text-slate-400 text-sm">${student.absentNum}</td>
+                    <td class="py-4 px-4 font-semibold text-slate-800 text-sm">
+                        ${student.name}
+                        <div class="sm:hidden text-xs text-slate-400 font-normal mt-0.5">${student.gender === 'L' ? 'Laki-laki' : 'Perempuan'}</div>
+                    </td>
+                    <td class="py-4 px-4 text-center hidden sm:table-cell text-xs text-slate-500 font-medium">
+                        ${student.gender === 'L' ? '<span class="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full">Laki-laki</span>' : '<span class="bg-pink-50 text-pink-600 px-2.5 py-1 rounded-full">Perempuan</span>'}
+                    </td>
+                    <td class="py-4 px-4 text-center">
+                        <div class="flex items-center justify-center gap-1 sm:gap-2">
+                            <!-- Hadir Button -->
+                            <button onclick="changeStudentStatus('${student.id}', 'H')" class="flex-1 max-w-[70px] py-2 text-xs font-bold rounded-xl border transition-all ${
+                                isHadir 
+                                ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm shadow-emerald-500/20' 
+                                : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-500'
+                            }">H</button>
+                            
+                            <!-- Sakit Button -->
+                            <button onclick="changeStudentStatus('${student.id}', 'S')" class="flex-1 max-w-[70px] py-2 text-xs font-bold rounded-xl border transition-all ${
+                                isSakit 
+                                ? 'bg-blue-500 border-blue-500 text-white shadow-sm shadow-blue-500/20' 
+                                : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-500'
+                            }">S</button>
+                            
+                            <!-- Izin Button -->
+                            <button onclick="changeStudentStatus('${student.id}', 'I')" class="flex-1 max-w-[70px] py-2 text-xs font-bold rounded-xl border transition-all ${
+                                isIzin 
+                                ? 'bg-amber-500 border-amber-500 text-white shadow-sm shadow-amber-500/20' 
+                                : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-500'
+                            }">I</button>
+                            
+                            <!-- Alpa Button -->
+                            <button onclick="changeStudentStatus('${student.id}', 'A')" class="flex-1 max-w-[70px] py-2 text-xs font-bold rounded-xl border transition-all ${
+                                isAlpa 
+                                ? 'bg-rose-500 border-rose-500 text-white shadow-sm shadow-rose-500/20' 
+                                : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-500'
+                            }">A</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // CHANGE STUDENT STATUS
+        function changeStudentStatus(studentId, newStatus) {
+            state.tempAttendance[studentId] = newStatus;
+            renderAttendanceTbody();
+        }
+
+        // BULK ATTENDANCE MODIFICATION
+        function setAllAttendance(status) {
+            const activeStudents = getActiveStudents();
+            if (activeStudents.length === 0) return;
+            
+            activeStudents.forEach(st => {
+                state.tempAttendance[st.id] = status;
+            });
+            renderAttendanceTbody();
+            showToast("Berhasil", `Seluruh siswa diatur sebagai ${status === 'H' ? 'Hadir' : 'Absen'}`, "info");
+        }
+
+        // RESET ATTENDANCE
+        function resetAllAttendance() {
+            const activeStudents = getActiveStudents();
+            activeStudents.forEach(st => {
+                state.tempAttendance[st.id] = 'H';
+            });
+            renderAttendanceTbody();
+            showToast("Reset", "Data pengisian sementara dikembalikan ke status hadir", "info");
+        }
+
+        // SAVE ATTENDANCE TO LOCAL HISTORY
+        function saveAttendanceRecord() {
+            const dateInput = state.selectedDate;
+            const activeHistory = getActiveHistory();
+            
+            // Save inside class-specific history
+            activeHistory[dateInput] = { ...state.tempAttendance };
+            
+            // Persist to localStorage
+            localStorage.setItem('srma17_history_by_class', JSON.stringify(state.history));
+            
+            showToast("Tersimpan!", `Absensi tanggal ${formatIndonesianDate(dateInput)} berhasil disimpan!`, "success");
+            
+            // Refresh states
+            loadAttendanceForSelectedDate();
+            updateSidebarAndStats();
+            
+            // Update last updated metadata on class profile widget
+            const formattedTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('dash-last-update').innerText = `Hari Ini ${formattedTime}`;
+        }
+
+        // FILTER STUDENT INPUT ABSEN LIST
+        function filterAbsenList() {
+            const query = document.getElementById('search-absen-input').value.toLowerCase();
+            const rows = document.getElementById('attendance-list-tbody').getElementsByTagName('tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                const name = rows[i].getAttribute('data-student-name') || '';
+                if (name.includes(query)) {
+                    rows[i].classList.remove('hidden');
+                } else {
+                    rows[i].classList.add('hidden');
+                }
+            }
+        }
+
+        // ANALYTICAL METRICS CALCULATIONS
+        function updateSidebarAndStats() {
+            const activeStudents = getActiveStudents();
+            const activeHistory = getActiveHistory();
+
+            // Update sidebar student badge counts
+            const currentStudentCount = activeStudents.length;
+            document.getElementById('sidebar-student-count').innerText = `Siswa: ${currentStudentCount} Orang`;
+            document.getElementById('manage-student-badge').innerText = `${currentStudentCount} Orang`;
+
+            // Calculate ratios & totals
+            let boysCount = 0;
+            let girlsCount = 0;
+            activeStudents.forEach(s => {
+                if (s.gender === 'L') boysCount++;
+                else girlsCount++;
+            });
+
+            document.getElementById('dash-gender-ratio').innerText = `${boysCount} ♂ / ${girlsCount} ♀`;
+
+            // Calculate general average presence rate across class history database
+            let totalH = 0, totalS = 0, totalI = 0, totalA = 0;
+            const historyDates = Object.keys(activeHistory);
+            
+            if (historyDates.length > 0) {
+                historyDates.forEach(date => {
+                    const record = activeHistory[date];
+                    activeStudents.forEach(st => {
+                        const status = record[st.id] || 'H';
+                        if (status === 'H') totalH++;
+                        else if (status === 'S') totalS++;
+                        else if (status === 'I') totalI++;
+                        else if (status === 'A') totalA++;
+                    });
+                });
+
+                const grandTotal = totalH + totalS + totalI + totalA;
+                if (grandTotal > 0) {
+                    const avgPresence = ((totalH / grandTotal) * 100).toFixed(1);
+                    document.getElementById('dash-average-presence').innerText = `${avgPresence}%`;
+                } else {
+                    document.getElementById('dash-average-presence').innerText = "0.0%";
+                }
+            } else {
+                document.getElementById('dash-average-presence').innerText = "0.0%";
+            }
+        }
+
+        // DASHBOARD TODAY'S QUICK CARDS UPDATE
+        function updateDashboardCardStats() {
+            const today = getTodayDateString();
+            const activeHistory = getActiveHistory();
+            const activeStudents = getActiveStudents();
+            const record = activeHistory[today] || {};
+
+            let hadir = 0, sakit = 0, izin = 0, alpa = 0;
+
+            activeStudents.forEach(st => {
+                const status = record[st.id] || '-';
+                if (status === 'H') hadir++;
+                else if (status === 'S') sakit++;
+                else if (status === 'I') izin++;
+                else if (status === 'A') alpa++;
+            });
+
+            // Update DOM counters
+            document.getElementById('stat-hadir').innerText = hadir;
+            document.getElementById('stat-sakit').innerText = sakit;
+            document.getElementById('stat-izin').innerText = izin;
+            document.getElementById('stat-alpa').innerText = alpa;
+        }
+
+        // RENDER WEEKLY GRAPHICS VISUALIZATIONS
+        function renderDashboardCharts() {
+            const ctx = document.getElementById('weeklyAttendanceChart').getContext('2d');
+            const activeHistory = getActiveHistory();
+            const activeStudents = getActiveStudents();
+            
+            // Destruct chart if already rendered in session
+            if (attendanceChartInstance) {
+                attendanceChartInstance.destroy();
+            }
+
+            // Get last 5 recorded history dates for clean timeline chart
+            const historyDates = Object.keys(activeHistory).sort().slice(-5);
+
+            if (historyDates.length === 0 || activeStudents.length === 0) {
+                // Draw template state chart empty
+                attendanceChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Belum Ada Data'],
+                        datasets: [{ label: 'Kehadiran', data: [0], backgroundColor: '#3b82f6' }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+                return;
+            }
+
+            const chartLabels = historyDates.map(date => {
+                const parts = date.split('-');
+                return `${parts[2]}/${parts[1]}`; // Render simple dd/mm
+            });
+
+            const datasetHadir = [];
+            const datasetSakit = [];
+            const datasetIzin = [];
+            const datasetAlpa = [];
+
+            historyDates.forEach(date => {
+                const record = activeHistory[date];
+                let h = 0, s = 0, i = 0, a = 0;
+                
+                activeStudents.forEach(st => {
+                    const status = record[st.id] || 'H';
+                    if (status === 'H') h++;
+                    else if (status === 'S') s++;
+                    else if (status === 'I') i++;
+                    else if (status === 'A') a++;
+                });
+
+                datasetHadir.push(h);
+                datasetSakit.push(s);
+                datasetIzin.push(i);
+                datasetAlpa.push(a);
+            });
+
+            attendanceChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartLabels,
+                    datasets: [
+                        {
+                            label: 'Hadir',
+                            data: datasetHadir,
+                            backgroundColor: '#10b981', // Emerald-500
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Sakit',
+                            data: datasetSakit,
+                            backgroundColor: '#3b82f6', // Blue-500
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Izin',
+                            data: datasetIzin,
+                            backgroundColor: '#f59e0b', // Amber-500
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Alpa',
+                            data: datasetAlpa,
+                            backgroundColor: '#f43f5e', // Rose-500
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true, grid: { display: false } },
+                        y: { stacked: true, max: activeStudents.length, grid: { color: '#f1f5f9' } }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Plus Jakarta Sans' } } }
+                    }
+                }
+            });
+        }
+
+        // REKAPITULASI LIST VIEW
+        function renderRekapList() {
+            const tbody = document.getElementById('rekap-list-tbody');
+            tbody.innerHTML = '';
+
+            const activeStudents = getActiveStudents();
+            const activeHistory = getActiveHistory();
+
+            if (activeStudents.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="py-8 text-center text-xs text-slate-400">
+                            Belum ada siswa terdaftar pada kelas ini.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let grandH = 0, grandS = 0, grandI = 0, grandA = 0;
+
+            // Generate row for each student
+            activeStudents.sort((a,b) => a.absentNum - b.absentNum).forEach((st) => {
+                let stH = 0, stS = 0, stI = 0, stA = 0;
+
+                // Loop student's record throughout all saved dates of active class
+                Object.values(activeHistory).forEach(record => {
+                    const status = record[st.id];
+                    if (status === 'H') stH++;
+                    else if (status === 'S') stS++;
+                    else if (status === 'I') stI++;
+                    else if (status === 'A') stA++;
+                });
+
+                grandH += stH;
+                grandS += stS;
+                grandI += stI;
+                grandA += stA;
+
+                const totalSession = stH + stS + stI + stA;
+                const presencePercentage = totalSession > 0 ? ((stH / totalSession) * 100).toFixed(1) : "100.0";
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/50 transition-colors";
+                tr.setAttribute('data-student-name-rekap', st.name.toLowerCase());
+
+                tr.innerHTML = `
+                    <td class="py-4 px-4 text-center text-sm font-bold text-slate-400">${st.absentNum}</td>
+                    <td class="py-4 px-4 font-semibold text-slate-800 text-sm">${st.name}</td>
+                    <td class="py-4 px-4 text-center font-semibold text-emerald-600 bg-emerald-50/10">${stH}</td>
+                    <td class="py-4 px-4 text-center font-semibold text-blue-600 bg-blue-50/10">${stS}</td>
+                    <td class="py-4 px-4 text-center font-semibold text-amber-600 bg-amber-50/10">${stI}</td>
+                    <td class="py-4 px-4 text-center font-semibold text-rose-600 bg-rose-50/10">${stA}</td>
+                    <td class="py-4 px-4 text-center font-bold text-slate-700">${presencePercentage}%</td>
+                    <td class="py-4 px-4">
+                        <button onclick="viewStudentModalDetail('${st.id}')" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg transition-all flex items-center gap-1">
+                            <i class="fa-solid fa-eye"></i> Detail
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Update top overall cumulative numbers
+            document.getElementById('rekap-total-hadir').innerText = grandH;
+            document.getElementById('rekap-total-sakit').innerText = grandS;
+            document.getElementById('rekap-total-izin').innerText = grandI;
+            document.getElementById('rekap-total-alpa').innerText = grandA;
+        }
+
+        // FILTER REKAPLIST BY NAME
+        function filterRekapList() {
+            const query = document.getElementById('search-rekap-input').value.toLowerCase();
+            const rows = document.getElementById('rekap-list-tbody').getElementsByTagName('tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                const name = rows[i].getAttribute('data-student-name-rekap') || '';
+                if (name.includes(query)) {
+                    rows[i].classList.remove('hidden');
+                } else {
+                    rows[i].classList.add('hidden');
+                }
+            }
+        }
+
+        // RENDER LOG OF ACTIVE SAVED HISTORICAL DATES
+        function renderHistoricalDates() {
+            const container = document.getElementById('historical-dates-list');
+            container.innerHTML = '';
+
+            const activeHistory = getActiveHistory();
+            const sortedDates = Object.keys(activeHistory).sort().reverse();
+
+            if (sortedDates.length === 0) {
+                container.innerHTML = '<span class="text-xs text-slate-400 font-medium">Belum ada tanggal tersimpan untuk kelas ini.</span>';
+                return;
+            }
+
+            sortedDates.forEach(date => {
+                const badge = document.createElement('div');
+                badge.className = "flex items-center space-x-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-1.5 px-3 rounded-full transition-all cursor-pointer";
+                badge.onclick = () => {
+                    document.getElementById('absensi-date').value = date;
+                    switchView('input-absen');
+                };
+                badge.innerHTML = `
+                    <i class="fa-regular fa-calendar text-blue-500"></i>
+                    <span>${date}</span>
+                `;
+                container.appendChild(badge);
+            });
+        }
+
+        // ROSTER MANAGEMENT (KELOLA SISWA)
+        function renderRosterList() {
+            const tbody = document.getElementById('roster-list-tbody');
+            tbody.innerHTML = '';
+
+            const activeStudents = getActiveStudents();
+
+            if (activeStudents.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="py-8 text-center text-xs text-slate-400">
+                            Belum ada siswa terdaftar di kelas aktif. Silakan isi form di sebelah kiri.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            activeStudents.sort((a,b) => Number(a.absentNum) - Number(b.absentNum)).forEach(st => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/50 transition-colors";
+                tr.setAttribute('data-roster-name', st.name.toLowerCase());
+
+                tr.innerHTML = `
+                    <td class="py-3 px-4 text-center font-bold text-slate-500">${st.absentNum}</td>
+                    <td class="py-3 px-4 font-semibold text-slate-800 text-sm">${st.name}</td>
+                    <td class="py-3 px-4 text-center">
+                        ${st.gender === 'L' ? '<span class="bg-blue-50 text-blue-600 text-[10px] font-extrabold px-2.5 py-1 rounded-full">LAKI-LAKI</span>' : '<span class="bg-pink-50 text-pink-600 text-[10px] font-extrabold px-2.5 py-1 rounded-full">PEREMPUAN</span>'}
+                    </td>
+                    <td class="py-3 px-4 text-right">
+                        <div class="flex justify-end gap-1">
+                            <button onclick="editStudentInit('${st.id}')" class="p-2 text-slate-400 hover:text-blue-500 hover:bg-slate-100 rounded-lg transition-all"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button onclick="deleteStudentConfirm('${st.id}')" class="p-2 text-slate-400 hover:text-rose-500 hover:bg-slate-100 rounded-lg transition-all"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // FILTER ROSTER LIST
+        function filterRosterList() {
+            const query = document.getElementById('search-roster-input').value.toLowerCase();
+            const rows = document.getElementById('roster-list-tbody').getElementsByTagName('tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                const name = rows[i].getAttribute('data-roster-name') || '';
+                if (name.includes(query)) {
+                    rows[i].classList.remove('hidden');
+                } else {
+                    rows[i].classList.add('hidden');
+                }
+            }
+        }
+
+        // RENDER CLASSES MANAGEMENT SUB-ROSTER
+        function renderClassManagementList() {
+            const container = document.getElementById('class-management-list');
+            if (!container) return;
+            container.innerHTML = '';
+
+            state.classes.forEach(cls => {
+                const isCurrent = cls.id === state.activeClassId;
+                const div = document.createElement('div');
+                div.className = `flex justify-between items-center p-3 rounded-xl border text-xs transition-all ${
+                    isCurrent 
+                    ? 'bg-blue-50 border-blue-200 text-blue-800 font-bold' 
+                    : 'bg-slate-50 border-slate-100 text-slate-600 hover:bg-slate-100'
+                }`;
+                
+                div.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-folder ${isCurrent ? 'text-blue-500' : 'text-slate-400'}"></i>
+                        <span>${cls.name}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        ${!isCurrent ? `
+                            <button onclick="changeActiveClass('${cls.id}')" class="p-1 hover:bg-blue-100 text-blue-600 rounded transition-all" title="Buka Kelas">
+                                <i class="fa-solid fa-folder-open"></i>
+                            </button>
+                        ` : '<span class="text-[9px] px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-black uppercase">Aktif</span>'}
+                        
+                        <button onclick="deleteClassConfirm('${cls.id}')" class="p-1 hover:bg-rose-100 text-rose-500 rounded transition-all" title="Hapus Kelas" ${state.classes.length <= 1 ? 'disabled style="opacity: 0.3; cursor: not-allowed;"' : ''}>
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // ADD NEW CLASS HANDLER
+        function handleClassFormSubmit(event) {
+            event.preventDefault();
+            const classInput = document.getElementById('new-class-name');
+            const className = classInput.value.trim();
+
+            if (!className) return;
+
+            const newId = 'c' + Date.now();
+            
+            // Push into classes list
+            state.classes.push({ id: newId, name: className });
+            localStorage.setItem('srma17_classes', JSON.stringify(state.classes));
+
+            // Initialize empty arrays
+            state.students[newId] = [];
+            state.history[newId] = {};
+            localStorage.setItem('srma17_students_by_class', JSON.stringify(state.students));
+            localStorage.setItem('srma17_history_by_class', JSON.stringify(state.history));
+
+            classInput.value = '';
+
+            // Synchronize selectors
+            populateClassSelector();
+            renderClassManagementList();
+
+            showToast("Kelas Dibuat", `Kelas "${className}" berhasil dibuat!`, "success");
+
+            // Auto-switch to newly created class
+            changeActiveClass(newId);
+        }
+
+        // DELETE CLASS CORE
+        function deleteClassConfirm(classId) {
+            if (state.classes.length <= 1) {
+                showToast("Ditolak", "Sistem harus memiliki minimal satu kelas aktif.", "error");
+                return;
+            }
+
+            const cls = state.classes.find(c => c.id === classId);
+            if (!cls) return;
+
+            openConfirmModal(
+                "Hapus Kelas?",
+                `Apakah Anda yakin ingin menghapus kelas "${cls.name}"? Semua data siswa dan riwayat absensi kelas ini akan hilang secara permanen!`,
+                () => {
+                    // Filter classes
+                    state.classes = state.classes.filter(c => c.id !== classId);
+                    localStorage.setItem('srma17_classes', JSON.stringify(state.classes));
+
+                    // Clear student and history partitions
+                    delete state.students[classId];
+                    delete state.history[classId];
+                    localStorage.setItem('srma17_students_by_class', JSON.stringify(state.students));
+                    localStorage.setItem('srma17_history_by_class', JSON.stringify(state.history));
+
+                    // If active class is deleted, fall back to the first available class
+                    if (state.activeClassId === classId) {
+                        state.activeClassId = state.classes[0].id;
+                        localStorage.setItem('srma17_active_class_id', state.activeClassId);
+                    }
+
+                    populateClassSelector();
+                    renderClassManagementList();
+                    updateSidebarAndStats();
+                    switchView(state.currentView);
+                    
+                    showToast("Kelas Dihapus", "Kelas dan semua data di dalamnya berhasil dibersihkan.", "error");
+                    closeConfirmModal();
+                }
+            );
+        }
+
+        // INITIALIZE STUDENT FORM EDIT STATUS
+        function editStudentInit(studentId) {
+            const activeStudents = getActiveStudents();
+            const student = activeStudents.find(s => s.id === studentId);
+            if (!student) return;
+
+            document.getElementById('form-siswa-title').innerText = "Edit Data Siswa";
+            document.getElementById('student-edit-id').value = student.id;
+            document.getElementById('student-absen-num').value = student.absentNum;
+            document.getElementById('student-fullname').value = student.name;
+            document.getElementById('student-gender').value = student.gender;
+
+            // Show cancel edit trigger
+            document.getElementById('btn-cancel-edit').classList.remove('hidden');
+            document.getElementById('btn-submit-siswa').innerText = "Update Siswa";
+            
+            // Scroll form to view nicely on mobile
+            document.getElementById('student-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // RESET STUDENT FORM TO ADD STATE
+        function resetStudentForm() {
+            document.getElementById('form-siswa-title').innerText = "Tambah Siswa Baru";
+            document.getElementById('student-edit-id').value = '';
+            document.getElementById('student-absen-num').value = '';
+            document.getElementById('student-fullname').value = '';
+            document.getElementById('student-gender').value = '';
+
+            document.getElementById('btn-cancel-edit').classList.add('hidden');
+            document.getElementById('btn-submit-siswa').innerText = "Simpan Siswa";
+        }
+
+        // HANDLE SUBMIT (CREATE AND UPDATE STUDENT)
+        function handleStudentFormSubmit(event) {
+            event.preventDefault();
+
+            const editId = document.getElementById('student-edit-id').value;
+            const absentNum = document.getElementById('student-absen-num').value;
+            const fullName = document.getElementById('student-fullname').value;
+            const gender = document.getElementById('student-gender').value;
+
+            const activeStudents = getActiveStudents();
+
+            if (editId) {
+                // Update Logic
+                const index = activeStudents.findIndex(s => s.id === editId);
+                if (index !== -1) {
+                    activeStudents[index].absentNum = parseInt(absentNum);
+                    activeStudents[index].name = fullName;
+                    activeStudents[index].gender = gender;
+                    showToast("Siswa Diperbarui", `${fullName} berhasil diperbarui.`, "success");
+                }
+            } else {
+                // Insert Logic
+                const newStudentId = 's' + (Date.now());
+                const newStudent = {
+                    id: newStudentId,
+                    name: fullName,
+                    gender: gender,
+                    absentNum: parseInt(absentNum)
+                };
+                activeStudents.push(newStudent);
+                showToast("Siswa Ditambahkan", `${fullName} berhasil didaftarkan ke kelas aktif.`, "success");
+            }
+
+            // Sync database changes to local
+            localStorage.setItem('srma17_students_by_class', JSON.stringify(state.students));
+            
+            resetStudentForm();
+            renderRosterList();
+            updateSidebarAndStats();
+        }
+
+        // DELETE STUDENT CONFIRMATION
+        function deleteStudentConfirm(studentId) {
+            const activeStudents = getActiveStudents();
+            const student = activeStudents.find(s => s.id === studentId);
+            if (!student) return;
+
+            openConfirmModal(
+                "Hapus Siswa?", 
+                `Apakah Anda yakin ingin menghapus ${student.name} dari roster kelas aktif? Data absensi pada riwayat lampau kelas akan terpengaruh.`,
+                () => {
+                    state.students[state.activeClassId] = activeStudents.filter(s => s.id !== studentId);
+                    localStorage.setItem('srma17_students_by_class', JSON.stringify(state.students));
+                    
+                    renderRosterList();
+                    updateSidebarAndStats();
+                    showToast("Siswa Dihapus", "Informasi siswa telah dicabut dari database.", "error");
+                    closeConfirmModal();
+                }
+            );
+        }
+
+        // CONFIRM TO EMPTY ALL ABSENCE HISTORY RECORDS FOR THE ACTIVE CLASS
+        function clearAllAttendanceHistoryConfirm() {
+            const activeClass = state.classes.find(c => c.id === state.activeClassId);
+            const className = activeClass ? activeClass.name : "kelas aktif";
+
+            openConfirmModal(
+                "Kosongkan Riwayat Absensi?",
+                `Tindakan ini akan menghapus seluruh rekaman presensi tanggal yang pernah Anda simpan khusus untuk "${className}". Data roster siswa akan tetap utuh.`,
+                () => {
+                    state.history[state.activeClassId] = {};
+                    localStorage.setItem('srma17_history_by_class', JSON.stringify(state.history));
+                    renderRekapList();
+                    renderHistoricalDates();
+                    updateSidebarAndStats();
+                    showToast("Riwayat Dikosongkan", "Semua tanggal rekaman kelas ini berhasil dihapus.", "error");
+                    closeConfirmModal();
+                }
+            );
+        }
+
+        // MODAL DIALOGS CORE
+        function openConfirmModal(title, msg, onYesCallback) {
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-message').innerText = msg;
+            
+            confirmActionCallback = onYesCallback;
+            document.getElementById('confirmation-modal').classList.remove('hidden');
+            
+            // Wire yes button
+            document.getElementById('confirm-yes-btn').onclick = function() {
+                if (confirmActionCallback) confirmActionCallback();
+            };
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmation-modal').classList.add('hidden');
+            confirmActionCallback = null;
+        }
+
+        // STUDENT DETAIL RECAP POPUP INFO
+        function viewStudentModalDetail(studentId) {
+            const activeStudents = getActiveStudents();
+            const activeHistory = getActiveHistory();
+            const student = activeStudents.find(s => s.id === studentId);
+            if (!student) return;
+
+            let stH = 0, stS = 0, stI = 0, stA = 0;
+            const breakdownLogs = [];
+
+            Object.entries(activeHistory).forEach(([date, record]) => {
+                const status = record[student.id] || '-';
+                if (status === 'H') stH++;
+                else if (status === 'S') stS++;
+                else if (status === 'I') stI++;
+                else if (status === 'A') stA++;
+
+                if (status !== '-') {
+                    breakdownLogs.push({ date, status });
+                }
+            });
+
+            const total = stH + stS + stI + stA;
+            const presencePercentage = total > 0 ? ((stH / total) * 100).toFixed(1) : "100.0";
+
+            let logsHTML = breakdownLogs.reverse().map(log => {
+                let text = '';
+                let colorClass = '';
+                if (log.status === 'H') { text = 'Hadir'; colorClass = 'bg-emerald-100 text-emerald-800'; }
+                else if (log.status === 'S') { text = 'Sakit'; colorClass = 'bg-blue-100 text-blue-800'; }
+                else if (log.status === 'I') { text = 'Izin'; colorClass = 'bg-amber-100 text-amber-800'; }
+                else if (log.status === 'A') { text = 'Alpa'; colorClass = 'bg-rose-100 text-rose-800'; }
+                
+                return `
+                    <div class="flex justify-between items-center py-2 border-b border-slate-100 text-xs">
+                        <span class="font-medium text-slate-600">${formatIndonesianDate(log.date)}</span>
+                        <span class="px-2 py-0.5 rounded-full font-bold ${colorClass}">${text}</span>
+                    </div>
+                `;
+            }).join('');
+
+            if (breakdownLogs.length === 0) {
+                logsHTML = '<p class="text-xs text-slate-400 py-4 text-center">Belum memiliki riwayat absensi.</p>';
+            }
+
+            // Temporarily replace modal DOM content or alert beautiful custom detail popup
+            const detailModal = document.createElement('div');
+            detailModal.id = "student-detail-popup";
+            detailModal.className = "fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4";
+            detailModal.innerHTML = `
+                <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <span class="text-[10px] font-black tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full uppercase">Siswa No Absen: ${student.absentNum}</span>
+                            <h3 class="text-lg font-bold text-slate-900 mt-2">${student.name}</h3>
+                            <p class="text-xs text-slate-400">Rincian Kehadiran Kelas Aktif</p>
+                        </div>
+                        <button onclick="document.getElementById('student-detail-popup').remove()" class="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-700 transition-all"><i class="fa-solid fa-xmark text-lg"></i></button>
+                    </div>
+
+                    <!-- Micro Stats Panel -->
+                    <div class="grid grid-cols-4 gap-2 mb-4 bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
+                        <div>
+                            <span class="text-[10px] text-slate-400 font-semibold uppercase">Hadir</span>
+                            <p class="text-sm font-extrabold text-emerald-600">${stH}</p>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400 font-semibold uppercase">Sakit</span>
+                            <p class="text-sm font-extrabold text-blue-600">${stS}</p>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400 font-semibold uppercase">Izin</span>
+                            <p class="text-sm font-extrabold text-amber-600">${stI}</p>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400 font-semibold uppercase">Alpa</span>
+                            <p class="text-sm font-extrabold text-rose-600">${stA}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-blue-50/50 border border-blue-100 rounded-xl mb-4 text-sm font-semibold">
+                        <span class="text-xs text-blue-800">Tingkat Kehadiran:</span>
+                        <span class="text-blue-700 text-base font-black">${presencePercentage}%</span>
+                    </div>
+
+                    <h4 class="font-bold text-xs text-slate-500 mb-2 uppercase tracking-wide">Linimasa Riwayat</h4>
+                    <div class="max-h-[200px] overflow-y-auto px-1">
+                        ${logsHTML}
+                    </div>
+
+                    <div class="mt-6">
+                        <button onclick="document.getElementById('student-detail-popup').remove()" class="w-full py-2.5 bg-slate-950 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition-all">Tutup Ringkasan</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(detailModal);
+        }
+
+        // CSV FILE EXPORTER FOR TEACHERS
+        function exportToCSV() {
+            const activeHistory = getActiveHistory();
+            const activeStudents = getActiveStudents();
+
+            if (Object.keys(activeHistory).length === 0) {
+                showToast("Gagal Ekspor", "Data riwayat absensi kelas ini masih kosong. Silakan isi presensi terlebih dahulu.", "error");
+                return;
+            }
+
+            const dates = Object.keys(activeHistory).sort();
+            
+            // Build CSV Headers
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "No Absen,Nama Siswa,Gender,";
+            csvContent += dates.map(d => `"${d}"`).join(",") + ",Total Hadir,Total Sakit,Total Izin,Total Alpa,Persentase\n";
+
+            // Build student records rows
+            activeStudents.sort((a,b) => a.absentNum - b.absentNum).forEach(st => {
+                let stH = 0, stS = 0, stI = 0, stA = 0;
+                let studentRow = `"${st.absentNum}","${st.name}","${st.gender}",`;
+
+                const presenceHistory = dates.map(date => {
+                    const status = activeHistory[date][st.id] || "-";
+                    if (status === 'H') stH++;
+                    else if (status === 'S') stS++;
+                    else if (status === 'I') stI++;
+                    else if (status === 'A') stA++;
+                    return `"${status}"`;
+                }).join(",");
+
+                const total = stH + stS + stI + stA;
+                const percentage = total > 0 ? ((stH / total) * 100).toFixed(1) : "100.0";
+
+                studentRow += presenceHistory + `,${stH},${stS},${stI},${stA},"${percentage}%"\n`;
+                csvContent += studentRow;
+            });
+
+            // Get active class info for filename
+            const activeClass = state.classes.find(c => c.id === state.activeClassId);
+            const className = activeClass ? activeClass.name.replace(/\s+/g, '_') : "Kelas";
+
+            // Create download trigger element
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Rekap_Absensi_${className}_SRMA_17_Surakarta_${getTodayDateString()}.csv`);
+            document.body.appendChild(link); // Required for FF
+
+            link.click();
+            document.body.removeChild(link);
+            
+            showToast("Sukses Ekspor!", "Laporan CSV berhasil diunduh ke komputer Anda.", "success");
+        }
+    </script>
+</body>
+</html>
